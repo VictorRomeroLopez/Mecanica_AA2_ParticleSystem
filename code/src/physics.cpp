@@ -80,6 +80,22 @@ void renderPrims() {
 		Cube::drawCube();
 }
 
+//Variables del GUI
+bool play_simulation = false;
+bool use_Sphere_Collider = true;
+bool use_Capsule_Collider = true;
+bool use_Gravity = true;
+float particle_Mass = 1.0f;
+float elastic_coeficient = 1.0f;
+float friction_coeficient = 1.0f;
+float sphere_Mass = 1.0f;
+float sphere_Radius = 1.0f;
+glm::vec3 sphere_position;
+glm::vec3 capsule_position_a;
+glm::vec3 capsule_position_b;
+float capsule_Radius = 1.0f;
+glm::vec3 gravity_Accel;
+
 
 void GUI() {
 	bool show = true;
@@ -88,15 +104,32 @@ void GUI() {
 	// Do your GUI code here....
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
-
+		ImGui::Checkbox("Play Simulation", &play_simulation);
+		ImGui::Button("Reset Simulation");
+		ImGui::DragFloat("Particle Mass", &particle_Mass);
+		ImGui::BulletText("E L A S T I C I T Y  A N D  F R I C T I O N");
+		ImGui::DragFloat("Elastic Coeficient", &elastic_coeficient);
+		ImGui::DragFloat("Friction Coeficient", &friction_coeficient);
+		ImGui::BulletText("C O L L I D E R S");
+		ImGui::Checkbox("Use Sphere Collider", &use_Sphere_Collider);
+		ImGui::DragFloat("Sphere Mass", &sphere_Mass);
+		ImGui::DragFloat3("Sphere Position", &sphere_position.x);
+		ImGui::DragFloat("Sphere Radius", &sphere_Radius);
+		ImGui::Checkbox("Use Capsule Collider", &use_Capsule_Collider);
+		ImGui::DragFloat3("Capsule Pos A", &capsule_position_a.x);
+		ImGui::DragFloat3("Capsule Pos B", &capsule_position_b.x);
+		ImGui::DragFloat("Capsule Radius", &capsule_Radius);
+		ImGui::BulletText("F O R C E S");
+		ImGui::Checkbox("Use Gravity", &use_Gravity);
+		ImGui::DragFloat3("Gravity Accel", &gravity_Accel.x);
 	}
 	// .........................
-	
+
 	ImGui::End();
 
 	// Example code -- ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
 	bool show_test_window = false;
-	if(show_test_window) {
+	if (show_test_window) {
 		ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);
 		ImGui::ShowTestWindow(&show_test_window);
 	}
