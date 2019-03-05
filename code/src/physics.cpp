@@ -135,18 +135,18 @@ void GUI() {
 	}
 }
 
-ParticleSystem particleSystem(5000, 6);
+
+ParticleSystem particleSystem = ParticleSystem();
 
 void PhysicsInit() {
 	// Do your initialization code here...
-
 	// ...................................
 }
 
 void PhysicsUpdate(float dt) {
 	// Do your update code here...
-	Particles::updateParticles(0, particleSystem.size, particleSystem.particles->position.coordenates);
-	particleSystem.updateParticles(dt);
+	Particles::updateParticles(0, 5000, &particleSystem.positions[0].x);
+	particleSystem.update(dt);
 	// ...........................
 }
 
