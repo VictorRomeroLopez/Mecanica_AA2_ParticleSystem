@@ -146,7 +146,6 @@ void PhysicsInit() {
 void PhysicsUpdate(float dt) {
 	// Do your update code here...
 	Particles::updateParticles(0, 5000, &particleSystem.positions[0].x);
-	particleSystem.update(dt);
 	// ...........................
 }
 
