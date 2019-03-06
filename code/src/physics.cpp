@@ -40,8 +40,6 @@ namespace Cube {
 	extern void drawCube();
 }
 
-
-
 // Boolean variables allow to show/hide the primitives
 bool renderSphere = false;
 bool renderCapsule = false;
@@ -137,15 +135,20 @@ void GUI() {
 
 
 ParticleSystem particleSystem = ParticleSystem();
+std::vector<Collider*> colliders;
+std::vector<ForceActuator*> forceActuators;
 
 void PhysicsInit() {
 	// Do your initialization code here...
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(5, 0, -5), glm::vec3(-5, 0, 5)}));
+	forceActuators.push_back(new GravityForce());
 	// ...................................
 }
 
 void PhysicsUpdate(float dt) {
 	// Do your update code here...
 	Particles::updateParticles(0, 5000, &particleSystem.positions[0].x);
+	euler(dt, particleSystem, colliders , forceActuators);
 	// ...........................
 }
 
