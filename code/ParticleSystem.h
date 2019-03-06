@@ -4,36 +4,19 @@
 #include <vector>
 #include <math.h>
 
-float getModule(glm::vec3& vec) {
-	return sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
-}
+float getModule(glm::vec3& vec);
 
-void normalize(glm::vec3& vec) {
-	vec /= getModule(vec);
-}
+void normalize(glm::vec3& vec);
 
-glm::vec3 getNormal(const glm::vec3& vector1, const glm::vec3& vector2) {
+glm::vec3 getNormal(const glm::vec3& vector1, const glm::vec3& vector2);
 
-	glm::vec3 normal;
+float getD(glm::vec3 normal, glm::vec3 point);
 
-	normal.x = vector1.y * vector2.z + vector2.y * vector1.z;
-	normal.y = -(vector1.x * vector2.z + vector2.x * vector1.z);
-	normal.z = vector1.x * vector2.y + vector2.x * vector1.y;
-
-	return normal;
-}
-
-float getD(glm::vec3 normal, glm::vec3 point) {
-	return -(normal.x * point.x + normal.y * point.y + normal.z * point.z);
-}
-
-float dotProduct(glm::vec3 vec1, glm::vec3 vec2) {
-	return vec1.x * vec2.x + vec1.y * vec2.y + vec1.z * vec2.z;
-}
+float dotProduct(glm::vec3 vec1, glm::vec3 vec2);
 
 struct Collider {
 
-	float bounceCoefficient;
+	float bounceCoefficient = .8f;
 	virtual bool checkCollision(const glm::vec3& prev_pos, const glm::vec3& next_pos) = 0;
 	virtual void getPlane(glm::vec3& normal, float& d) = 0;
 	void computeCollision(const glm::vec3& old_pos, const glm::vec3& old_vel, glm::vec3& new_pos, glm::vec3& new_vel) {
@@ -42,8 +25,8 @@ struct Collider {
 
 		getPlane(normal, d);
 
-		new_pos = new_pos - (1 + bounceCoefficient)*(dotProduct(normal, new_pos) + d) * normal;
-		new_vel = new_vel - (2)*(dotProduct(normal, new_vel)) * normal;
+		new_pos = new_pos - (1 + bounceCoefficient) * (dotProduct(normal, new_pos) + d) * normal;
+		new_vel = new_vel - (1 + bounceCoefficient) * (dotProduct(normal, new_vel)) * normal;
 	}
 };
 
@@ -126,32 +109,24 @@ struct ParticleSystem {
 	glm::vec3 velocity[5000];
 
 	ParticleSystem() {
-		for (int i = 0; i < 5000; i += 3) {
-			positions[i] = glm::vec3((float)((rand() % 101) - 50) / 10, (float)((rand() % 50) + 50) / 10, (float)((rand() % 101) - 50) / 10);
+		for (int i = 0; i < 5000; i ++) {
+			positions[i] = glm::vec3((float)((rand() % 90) - 10) / 10, (float)((rand() % 50) + 50) / 10, (float)((rand() % 90) - 40) / 10);
 		}
-		for (int i = 0; i < 5000; i += 3) {
-			velocity[i] = glm::vec3((float)(rand() % 10)-5, (float)(rand() % 10)-5 , (float)(rand() % 10)-5);
+		for (int i = 0; i < 5000; i ++) {
+			velocity[i] = glm::vec3((float)((rand() % 10)-5), (float)((rand() % 10)-5), (float)((rand() % 10)-5));
 		}
 	}
 };
-
-
 
 struct ForceActuator {
 	virtual glm::vec3 computeForce(float mass, const glm::vec3& position) = 0;
 };
 
-glm::vec3 computeForces(float mass, const glm::vec3& position, const std::vector<ForceActuator*>& force_acts) {
-	glm::vec3 aux = glm::vec3(0,0,0);
-	for (int i = 0; i < force_acts.size(); i++) {
-		aux += force_acts[i]->computeForce(mass, position);
-	}
-	return aux;
-}
-
 //Gravetat general
 struct GravityForce : ForceActuator {
-	glm::vec3 gravity = glm::vec3(0, -9.81, 0);
+	glm::vec3 gravity;
+
+	GravityForce() :gravity{ glm::vec3(0, -9.81, 0) } {};
 
 	glm::vec3 computeForce(float mass, const glm::vec3& position) {
 		return gravity;
@@ -169,18 +144,6 @@ struct PositionalGravityForce : ForceActuator {
 	}
 };
 
-void euler(float dt, ParticleSystem& particles, const std::vector<Collider*>& colliders, const std::vector<ForceActuator*>& force_acts) {
+void euler(float dt, ParticleSystem& particles, const std::vector<Collider*>& colliders, const std::vector<ForceActuator*>& force_acts);
 
-	for (int i = 0; i < colliders.size(); i++) {
-		for (int j = 0; j < particles.positions->length(); j++) {
-			if (colliders[i]->checkCollision(particles.positions[j], particles.positions[j] + dt * particles.velocity[j])){
-				colliders[i]->computeCollision(particles.positions[j], particles.velocity[j], particles.positions[j], particles.velocity[j]);
-			}
-			else {
-				computeForces(1, particles.positions[j], force_acts);
-			}
-
-		}
-	}
-
-}
+glm::vec3 computeForces(float mass, const glm::vec3& position, const std::vector<ForceActuator*>& force_acts);

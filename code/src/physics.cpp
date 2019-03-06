@@ -41,7 +41,7 @@ namespace Cube {
 }
 
 // Boolean variables allow to show/hide the primitives
-bool renderSphere = false;
+bool renderSphere = true;
 bool renderCapsule = false;
 bool renderParticles = true;
 bool renderMesh = false;
@@ -61,11 +61,8 @@ void renderPrims() {
 
 	if (renderParticles) {
 		int startDrawingFromParticle = 0;
-		//int numParticlesToDraw = Particles::maxParticles;
 		int numParticlesToDraw = 5000;
 		Particles::drawParticles(startDrawingFromParticle, numParticlesToDraw);
-		;
-
 	}
 
 	if (renderMesh)
@@ -133,15 +130,21 @@ void GUI() {
 	}
 }
 
-
 ParticleSystem particleSystem = ParticleSystem();
 std::vector<Collider*> colliders;
 std::vector<ForceActuator*> forceActuators;
 
 void PhysicsInit() {
 	// Do your initialization code here...
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(5, 0, -5), glm::vec3(-5, 0, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(5, 0, -5), glm::vec3(5, 10, -5), glm::vec3(-5, 10, -5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(-5, 0, -5), glm::vec3(5, 0, -5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(5, 0, -5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
+	colliders.push_back(new SphereCol(glm::vec3(0, 5, 0), 1));
 	forceActuators.push_back(new GravityForce());
+	Sphere::updateSphere(glm::vec3(0, 5, 0), 1);
 	// ...................................
 }
 
