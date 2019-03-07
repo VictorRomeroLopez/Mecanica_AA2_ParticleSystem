@@ -42,7 +42,7 @@ namespace Cube {
 
 // Boolean variables allow to show/hide the primitives
 bool renderSphere = true;
-bool renderCapsule = false;
+bool renderCapsule = true;
 bool renderParticles = true;
 bool renderMesh = false;
 bool renderFiber = false;
@@ -143,8 +143,9 @@ void PhysicsInit() {
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
 	colliders.push_back(new SphereCol(glm::vec3(0, 3, 0), 1));
+	colliders.push_back(new CapsuleCol(glm::vec3(-3, 2, 0), glm::vec3(0, 2, -3), 1.f));
 	forceActuators.push_back(new GravityForce());
-	forceActuators.push_back(new PositionalGravityForce());
+	//forceActuators.push_back(new PositionalGravityForce());
 	Sphere::updateSphere(glm::vec3(0, 3, 0), 1);
 	// ...................................
 }
@@ -153,6 +154,7 @@ void PhysicsUpdate(float dt) {
 	// Do your update code here...
 	Particles::updateParticles(0, 5000, &particleSystem.positions[0].x);
 	euler(dt, particleSystem, colliders , forceActuators);
+	Capsule::updateCapsule(glm::vec3(-3, 2, 0), glm::vec3(0, 2, -3), 1.f);
 	// ...........................
 }
 

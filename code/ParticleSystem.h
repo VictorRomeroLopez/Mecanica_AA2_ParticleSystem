@@ -3,6 +3,7 @@
 #include <time.h>
 #include <vector>
 #include <math.h>
+#include <algorithm>
 
 float getModule(glm::vec3& vec);
 
@@ -86,25 +87,75 @@ struct SphereCol : Collider {
 		float a = dotProduct(v, v);
 		float b = 2 * dotProduct(old_pos, v) + 2 * dotProduct(v, center);
 		float c = dotProduct(old_pos, old_pos) - 2 * dotProduct(old_pos, center) + dotProduct(center, center);
-		float landa = (-b - sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
+		float landa1 = (-b + sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
+		float landa2 = (-b - sqrt(pow(b, 2) - 4 * a * c)) / 2 * a;
+		glm::vec3 punt_tall;
 
-		glm::vec3 punt_tall = old_pos * landa;
+		if(landa1 < landa2)
+			punt_tall = old_pos + landa1 * v;
+		else
+			punt_tall = old_pos + landa2 * v;
+
 		normal = punt_tall - center;
 		normalize(normal);
 		d = getD(normal, punt_tall);
 	}
 };
 
-/*
 struct CapsuleCol : Collider {
-	bool checkCollision(const glm::vec3& prev_pos, const glm::vec3& next_pos) {
+	glm::vec3 center1;
+	glm::vec3 center2;
+	glm::vec3 Q;
+	glm::vec3 old_pos;
+	glm::vec3 new_pos;
+	float radius;
 
+	CapsuleCol(glm::vec3 _center1, glm::vec3 _center2, float _radius) :center1{ _center1 }, center2{ _center2 }, radius{ _radius }{};
+
+	bool checkCollision(const glm::vec3& prev_pos, const glm::vec3& next_pos) {
+		old_pos = prev_pos;
+		new_pos = next_pos;
+		float alpha = glm::clamp(( dotProduct((next_pos-center1), (center2-center1)) / getModule(center2 - center1)), 0.f, getModule(center2-center1));
+		Q = center1 + alpha * (center2 - center1);
+		return getModule(next_pos-Q) < radius;
 	}
 
 	void getPlane(glm::vec3& normal, float& d) {
+		glm::vec3 punt_tall;
+		glm::vec3 v = (new_pos - old_pos);
+		v /= 2;
+		glm::vec3 aux = old_pos + v;
+		for (int i = 0; i < 5; i++) {
+			
+			float alpha = glm::clamp(((dotProduct((aux - center1), (center2 - center1))) / getModule(center2 - center1)), 0.f, getModule(center2 - center1));
+			Q = center1 + alpha * (center2 - center1);
+			
+			if (getModule(aux - Q) > radius) 
+			{
+				v = old_pos - aux;
+				v /= 2;
+				new_pos = aux + v;
+				v = new_pos - aux;
+				v /= 2;
+				aux += v;
+			}
+			else if(getModule(aux - Q) < radius) 
+			{
+				v = new_pos - aux;
+				v /= 2;
+				old_pos = aux + v;
+				v = old_pos - aux;
+				v /= 2;
+				aux += v;
+			}
+		}
 
+		punt_tall = aux;
+		normal = punt_tall - Q;
+		normalize(normal);
+		d = getD(normal, punt_tall);
 	}
-};*/
+};
 
 struct ParticleSystem {
 	glm::vec3 positions[5000];
@@ -112,9 +163,10 @@ struct ParticleSystem {
 
 	ParticleSystem() {
 		for (int i = 0; i < 5000; i ++) {
-			positions[i] = glm::vec3((float)((rand() % 10000) - 5000) / 1000, (float)((rand() % 50) + 50) / 10, (float)((rand() % 10000) - 5000) / 1000);
+			positions[i] = glm::vec3((float)((rand() % 9000) - 4500) / 1000, (float)((rand() % 40) + 40) / 10, (float)((rand() % 9000) - 4500) / 1000);
 		}
 		for (int i = 0; i < 5000; i ++) {
+			//velocity[i] = glm::vec3((float)((rand() % 10)- 5), (float)((rand() % 10)-5), (float)((rand() % 10) - 5));
 			velocity[i] = glm::vec3(0, 0, 0);
 		}
 	}

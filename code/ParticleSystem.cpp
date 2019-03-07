@@ -1,7 +1,7 @@
 #include "ParticleSystem.h"
 
 float getModule(glm::vec3& vec) {
-	return sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2));
+	return abs(sqrt(pow(vec.x, 2) + pow(vec.y, 2) + pow(vec.z, 2)));
 }
 
 void normalize(glm::vec3& vec) {
