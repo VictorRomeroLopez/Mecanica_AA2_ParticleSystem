@@ -111,7 +111,7 @@ void GUI() {
 		{
 			reset_simulation = true;
 		}
-		ImGui::DragFloat("Particle Mass", &particleSystem.particleMass, 0.1f, 0, 10.0f);
+		ImGui::DragFloat("Particle Mass", &particleSystem.particleMass, 0.1f, -10.f, 10.0f);
 		
 		if (ImGui::TreeNode("Elasticity and Friction"))
 		{
@@ -123,7 +123,7 @@ void GUI() {
 		if (ImGui::TreeNode("Sphere"))
 		{
 			ImGui::Checkbox("Use Sphere Collider", &renderSphere);
-			ImGui::DragFloat("Sphere Mass", &sphereMass, 0.1f, 0, 10.0f);
+			ImGui::DragFloat("Sphere Mass", &sphereMass, 0.1f, -10.f, 10.0f);
 			ImGui::DragFloat3("Sphere Position", &SphereCenter.x, 0.1f);
 			ImGui::DragFloat("Sphere Radius", &CurrentSphereRadius, 0.1f);
 			ImGui::TreePop();
