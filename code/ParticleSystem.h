@@ -16,7 +16,8 @@ float dotProduct(glm::vec3 vec1, glm::vec3 vec2);
 
 struct Collider {
 
-	float bounceCoefficient = .8f;
+	float bounceCoefficient = .2f;
+	float nu = 1.f;
 	virtual bool checkCollision(const glm::vec3& prev_pos, const glm::vec3& next_pos) = 0;
 	virtual void getPlane(glm::vec3& normal, float& d) = 0;
 	void computeCollision(const glm::vec3& old_pos, const glm::vec3& old_vel, glm::vec3& new_pos, glm::vec3& new_vel) {
@@ -27,6 +28,7 @@ struct Collider {
 
 		new_pos = new_pos - (1 + bounceCoefficient) * (dotProduct(normal, new_pos) + d) * normal;
 		new_vel = new_vel - (1 + bounceCoefficient) * (dotProduct(normal, new_vel)) * normal;
+		new_vel -= nu * (old_vel - ((dotProduct(normal, old_vel)) * normal));
 	}
 };
 
@@ -110,10 +112,10 @@ struct ParticleSystem {
 
 	ParticleSystem() {
 		for (int i = 0; i < 5000; i ++) {
-			positions[i] = glm::vec3((float)((rand() % 90) - 10) / 10, (float)((rand() % 50) + 50) / 10, (float)((rand() % 90) - 40) / 10);
+			positions[i] = glm::vec3((float)((rand() % 10000) - 5000) / 1000, (float)((rand() % 50) + 50) / 10, (float)((rand() % 10000) - 5000) / 1000);
 		}
 		for (int i = 0; i < 5000; i ++) {
-			velocity[i] = glm::vec3((float)((rand() % 10)-5), (float)((rand() % 10)-5), (float)((rand() % 10)-5));
+			velocity[i] = glm::vec3(0, 0, 0);
 		}
 	}
 };
@@ -136,7 +138,7 @@ struct GravityForce : ForceActuator {
 //Centre de gravetat a un objecte 
 struct PositionalGravityForce : ForceActuator {
 	float massSphere = 3;
-	float G = 0.6674f;
+	float G = -0.6674f;
 	glm::vec3 sphere_position = glm::vec3(0,0,0);
 
 	glm::vec3 computeForce(float mass, const glm::vec3& position) {

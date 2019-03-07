@@ -129,8 +129,8 @@ void GUI() {
 		ImGui::ShowTestWindow(&show_test_window);
 	}
 }
-
 ParticleSystem particleSystem = ParticleSystem();
+
 std::vector<Collider*> colliders;
 std::vector<ForceActuator*> forceActuators;
 
@@ -142,9 +142,10 @@ void PhysicsInit() {
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
-	colliders.push_back(new SphereCol(glm::vec3(0, 5, 0), 1));
+	colliders.push_back(new SphereCol(glm::vec3(0, 3, 0), 1));
 	forceActuators.push_back(new GravityForce());
-	Sphere::updateSphere(glm::vec3(0, 5, 0), 1);
+	forceActuators.push_back(new PositionalGravityForce());
+	Sphere::updateSphere(glm::vec3(0, 3, 0), 1);
 	// ...................................
 }
 
