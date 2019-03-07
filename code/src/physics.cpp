@@ -1,6 +1,3 @@
-#include <imgui\imgui.h>
-#include <imgui\imgui_impl_sdl_gl3.h>
-#include <glm\gtc\matrix_transform.hpp>
 #include "../ParticleSystem.h"
 
 namespace Box {
@@ -53,7 +50,6 @@ void renderPrims() {
 	Box::drawCube();
 	Axis::drawAxis();
 
-
 	if (renderSphere)
 		Sphere::drawSphere();
 	if (renderCapsule)
@@ -77,20 +73,31 @@ void renderPrims() {
 
 //Variables del GUI
 bool play_simulation = false;
-bool use_Sphere_Collider = true;
-bool use_Capsule_Collider = true;
-bool use_Gravity = true;
-float particle_Mass = 1.0f;
-float elastic_coeficient = 1.0f;
-float friction_coeficient = 1.0f;
+bool reset_simulation = false;
+float bounceCoefficient = 0.0f;
+float nu = 0.0f;
+bool use_Gravity = false;
+glm::vec3 gravity;
+
+
+glm::vec3 SphereCenter(0,3,0);
+float CurrentSphereRadius(1.0f);
+SphereCol sphere(SphereCenter, CurrentSphereRadius);
+
+extern bool use_Gravity;
+extern glm::vec3 gravity;
+
 float sphere_Mass = 1.0f;
-float sphere_Radius = 1.0f;
-glm::vec3 sphere_position;
+
 glm::vec3 capsule_position_a;
 glm::vec3 capsule_position_b;
 float capsule_Radius = 1.0f;
 glm::vec3 gravity_Accel;
 
+ParticleSystem particleSystem = ParticleSystem();
+
+std::vector<Collider*> colliders;
+std::vector<ForceActuator*> forceActuators;
 
 void GUI() {
 	bool show = true;
@@ -100,23 +107,44 @@ void GUI() {
 	{
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);//FrameRate
 		ImGui::Checkbox("Play Simulation", &play_simulation);
-		ImGui::Button("Reset Simulation");
-		ImGui::DragFloat("Particle Mass", &particle_Mass);
-		ImGui::BulletText("E L A S T I C I T Y  A N D  F R I C T I O N");
-		ImGui::DragFloat("Elastic Coeficient", &elastic_coeficient);
-		ImGui::DragFloat("Friction Coeficient", &friction_coeficient);
-		ImGui::BulletText("C O L L I D E R S");
-		ImGui::Checkbox("Use Sphere Collider", &use_Sphere_Collider);
-		ImGui::DragFloat("Sphere Mass", &sphere_Mass);
-		ImGui::DragFloat3("Sphere Position", &sphere_position.x);
-		ImGui::DragFloat("Sphere Radius", &sphere_Radius);
-		ImGui::Checkbox("Use Capsule Collider", &use_Capsule_Collider);
-		ImGui::DragFloat3("Capsule Pos A", &capsule_position_a.x);
-		ImGui::DragFloat3("Capsule Pos B", &capsule_position_b.x);
-		ImGui::DragFloat("Capsule Radius", &capsule_Radius);
-		ImGui::BulletText("F O R C E S");
-		ImGui::Checkbox("Use Gravity", &use_Gravity);
-		ImGui::DragFloat3("Gravity Accel", &gravity_Accel.x);
+		if (ImGui::Button("Reset Simulation"))
+		{
+			reset_simulation = true;
+		}
+		ImGui::DragFloat("Particle Mass", &particleSystem.particleMass, 0.1f, 0, 10.0f);
+		
+		if (ImGui::TreeNode("Elasticity and Friction"))
+		{
+			ImGui::DragFloat("Elastic Coeficient", &bounceCoefficient, 0.1f, 0, 1.0f);
+			ImGui::DragFloat("Friction Coeficient", &nu, 0.1f, 0, 1.0f);
+			ImGui::TreePop();
+		}
+	
+		if (ImGui::TreeNode("Sphere"))
+		{
+			ImGui::Checkbox("Use Sphere Collider", &renderSphere);
+			ImGui::DragFloat("Sphere Mass", &sphere_Mass);
+			ImGui::DragFloat3("Sphere Position", &SphereCenter.x);
+			ImGui::DragFloat("Sphere Radius", &CurrentSphereRadius);
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Capsule"))
+		{
+			ImGui::Checkbox("Use Capsule Collider", &renderCapsule);
+			ImGui::DragFloat3("Capsule Pos A", &capsule_position_a.x, 0.1f);
+			ImGui::DragFloat3("Capsule Pos B", &capsule_position_b.x, 0.1f);
+			ImGui::DragFloat("Capsule Radius", &capsule_Radius, 0.1f);
+			ImGui::TreePop();
+		}
+
+		if (ImGui::TreeNode("Force"))
+		{
+			ImGui::Checkbox("Use Gravity", &use_Gravity);
+			ImGui::DragFloat3("Gravity Accel", &gravity.x, 0.1f);
+			ImGui::TreePop();
+		}
+		
 	}
 	// .........................
 
@@ -129,10 +157,7 @@ void GUI() {
 		ImGui::ShowTestWindow(&show_test_window);
 	}
 }
-ParticleSystem particleSystem = ParticleSystem();
 
-std::vector<Collider*> colliders;
-std::vector<ForceActuator*> forceActuators;
 
 void PhysicsInit() {
 	// Do your initialization code here...
@@ -142,21 +167,35 @@ void PhysicsInit() {
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
-	colliders.push_back(new SphereCol(glm::vec3(0, 3, 0), 1));
+	colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
 	forceActuators.push_back(new GravityForce());
 	forceActuators.push_back(new PositionalGravityForce());
-	Sphere::updateSphere(glm::vec3(0, 3, 0), 1);
+	
 	// ...................................
 }
 
 void PhysicsUpdate(float dt) {
 	// Do your update code here...
+	colliders.clear();
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(5, 0, -5), glm::vec3(5, 10, -5), glm::vec3(-5, 10, -5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(-5, 0, -5), glm::vec3(5, 0, -5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(5, 0, -5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
+	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
+	colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
+	Sphere::updateSphere(SphereCenter, CurrentSphereRadius);
+
 	Particles::updateParticles(0, 5000, &particleSystem.positions[0].x);
-	euler(dt, particleSystem, colliders , forceActuators);
+	euler(dt, particleSystem, colliders, forceActuators);
+
+	if (reset_simulation)
+		particleSystem.ResetParticlesPosition();
 	// ...........................
 }
 
 void PhysicsCleanup() {
 	// Do your cleanup code here...
 	// ............................
+	
 }

@@ -1,8 +1,20 @@
 #include <stdlib.h>
+#include <imgui\imgui.h>
+#include <imgui\imgui_impl_sdl_gl3.h>
 #include <glm\gtc\matrix_transform.hpp>
 #include <time.h>
 #include <vector>
 #include <math.h>
+
+//Variables para el GUI
+extern bool play_simulation;
+extern bool reset_simulation;
+
+extern float bounceCoefficient;
+extern float nu;
+
+extern bool use_Gravity;
+extern glm::vec3 gravity;
 
 float getModule(glm::vec3& vec);
 
@@ -16,8 +28,6 @@ float dotProduct(glm::vec3 vec1, glm::vec3 vec2);
 
 struct Collider {
 
-	float bounceCoefficient = .2f;
-	float nu = 1.f;
 	virtual bool checkCollision(const glm::vec3& prev_pos, const glm::vec3& next_pos) = 0;
 	virtual void getPlane(glm::vec3& normal, float& d) = 0;
 	void computeCollision(const glm::vec3& old_pos, const glm::vec3& old_vel, glm::vec3& new_pos, glm::vec3& new_vel) {
@@ -110,12 +120,28 @@ struct ParticleSystem {
 	glm::vec3 positions[5000];
 	glm::vec3 velocity[5000];
 
+	float particleMass;
+
 	ParticleSystem() {
 		for (int i = 0; i < 5000; i ++) {
 			positions[i] = glm::vec3((float)((rand() % 10000) - 5000) / 1000, (float)((rand() % 50) + 50) / 10, (float)((rand() % 10000) - 5000) / 1000);
 		}
 		for (int i = 0; i < 5000; i ++) {
 			velocity[i] = glm::vec3(0, 0, 0);
+		}
+	}
+
+	void ResetParticlesPosition()
+	{
+		if (reset_simulation)
+		{
+			for (int i = 0; i < 5000; i++) {
+				positions[i] = glm::vec3((float)((rand() % 10000) - 5000) / 1000, (float)((rand() % 50) + 50) / 10, (float)((rand() % 10000) - 5000) / 1000);
+			}
+			for (int i = 0; i < 5000; i++) {
+				velocity[i] = glm::vec3(0, 0, 0);
+			}
+			reset_simulation = false;
 		}
 	}
 };
@@ -126,12 +152,10 @@ struct ForceActuator {
 
 //Gravetat general
 struct GravityForce : ForceActuator {
-	glm::vec3 gravity;
-
-	GravityForce() :gravity{ glm::vec3(0, -9.81, 0) } {};
-
-	glm::vec3 computeForce(float mass, const glm::vec3& position) {
-		return gravity;
+	glm::vec3 computeForce(float mass, const glm::vec3& position)
+	{
+		if(use_Gravity) return gravity;
+		return glm::vec3(0, 0, 0);
 	}
 }; 
 

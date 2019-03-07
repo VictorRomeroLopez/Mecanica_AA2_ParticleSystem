@@ -36,13 +36,16 @@ glm::vec3 computeForces(float mass, const glm::vec3& position, const std::vector
 }
 
 void euler(float dt, ParticleSystem& particles, const std::vector<Collider*>& colliders, const std::vector<ForceActuator*>& force_acts) {
-	for (int j = 0; j < 5000; j++) {
-		for (int i = 0; i < colliders.size(); i++) {
-			if (colliders[i]->checkCollision(particles.positions[j], particles.positions[j] + dt * particles.velocity[j])) {
-				colliders[i]->computeCollision(particles.positions[j], particles.velocity[j], particles.positions[j] + dt * particles.velocity[j], particles.velocity[j]);
+	if (play_simulation)
+	{
+		for (int j = 0; j < 5000; j++) {
+			for (int i = 0; i < colliders.size(); i++) {
+				if (colliders[i]->checkCollision(particles.positions[j], particles.positions[j] + dt * particles.velocity[j])) {
+					colliders[i]->computeCollision(particles.positions[j], particles.velocity[j], particles.positions[j] + dt * particles.velocity[j], particles.velocity[j]);
+				}
 			}
+			particles.positions[j] += dt * particles.velocity[j];
+			particles.velocity[j] += dt * computeForces(particles.particleMass, particles.positions[j], force_acts);
 		}
-		particles.positions[j] += dt * particles.velocity[j];
-		particles.velocity[j] += dt * computeForces(1, particles.positions[j], force_acts);
 	}
 }
