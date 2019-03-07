@@ -39,7 +39,7 @@ namespace Cube {
 
 // Boolean variables allow to show/hide the primitives
 bool renderSphere = true;
-bool renderCapsule = false;
+bool renderCapsule = true;
 bool renderParticles = true;
 bool renderMesh = false;
 bool renderFiber = false;
