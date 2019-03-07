@@ -17,6 +17,8 @@ extern float nu;
 extern bool use_Gravity;
 extern glm::vec3 gravity;
 
+#define NUM_PARTICLES 5000
+
 float getModule(glm::vec3& vec);
 
 void normalize(glm::vec3& vec);
@@ -125,7 +127,7 @@ struct CapsuleCol : Collider {
 	bool checkCollision(const glm::vec3& prev_pos, const glm::vec3& next_pos) {
 		old_pos = prev_pos;
 		new_pos = next_pos;
-		float alpha = glm::clamp(( dotProduct((next_pos-center1), (center2-center1)) / getModule(center2 - center1)), 0.f, getModule(center2-center1));
+		float alpha = glm::clamp(( dotProduct((next_pos-center1), (center2-center1)) / pow(getModule(center2 - center1), 2)), 0.f, 1.f);
 		Q = center1 + alpha * (center2 - center1);
 		return getModule(next_pos-Q) < radius;
 	}
@@ -137,7 +139,7 @@ struct CapsuleCol : Collider {
 		glm::vec3 aux = old_pos + v;
 		for (int i = 0; i < 5; i++) {
 			
-			float alpha = glm::clamp(((dotProduct((aux - center1), (center2 - center1))) / getModule(center2 - center1)), 0.f, getModule(center2 - center1));
+			float alpha = glm::clamp(((dotProduct((aux - center1), (center2 - center1))) / pow(getModule(center2 - center1),2)), 0.f, 1.f);
 			Q = center1 + alpha * (center2 - center1);
 			
 			if (getModule(aux - Q) > radius) 
@@ -168,16 +170,16 @@ struct CapsuleCol : Collider {
 };
 
 struct ParticleSystem {
-	glm::vec3 positions[5000];
-	glm::vec3 velocity[5000];
+	glm::vec3 positions[NUM_PARTICLES];
+	glm::vec3 velocity[NUM_PARTICLES];
 
 	float particleMass;
 
 	ParticleSystem() {
-		for (int i = 0; i < 5000; i ++) {
-			positions[i] = glm::vec3((float)((rand() % 9000) - 4500) / 1000, (float)((rand() % 40) + 40) / 10, (float)((rand() % 9000) - 4500) / 1000);
+		for (int i = 0; i < NUM_PARTICLES; i ++) {
+			positions[i] = glm::vec3((float)((rand() % 9000) - 4500) / 1000, (float)((rand() % 50) + 45) / 10, (float)((rand() % 9000) - 4500) / 1000);
 		}
-		for (int i = 0; i < 5000; i ++) {
+		for (int i = 0; i < NUM_PARTICLES; i ++) {
 			//velocity[i] = glm::vec3((float)((rand() % 10)- 5), (float)((rand() % 10)-5), (float)((rand() % 10) - 5));
 			velocity[i] = glm::vec3(0, 0, 0);
 		}
@@ -187,10 +189,10 @@ struct ParticleSystem {
 	{
 		if (reset_simulation)
 		{
-			for (int i = 0; i < 5000; i++) {
+			for (int i = 0; i < NUM_PARTICLES; i++) {
 				positions[i] = glm::vec3((float)((rand() % 10000) - 5000) / 1000, (float)((rand() % 50) + 50) / 10, (float)((rand() % 10000) - 5000) / 1000);
 			}
-			for (int i = 0; i < 5000; i++) {
+			for (int i = 0; i < NUM_PARTICLES; i++) {
 				velocity[i] = glm::vec3(0, 0, 0);
 			}
 			reset_simulation = false;
@@ -214,8 +216,8 @@ struct GravityForce : ForceActuator {
 //Centre de gravetat a un objecte 
 struct PositionalGravityForce : ForceActuator {
 	float massSphere = 3;
-	float G = -0.6674f;
-	glm::vec3 sphere_position = glm::vec3(0,0,0);
+	float G = -6.674f;
+	glm::vec3 sphere_position = glm::vec3(0,3,0);
 
 	glm::vec3 computeForce(float mass, const glm::vec3& position) {
 		return ((G * mass * massSphere) / pow(getModule(position - sphere_position), 2)) * ((position - sphere_position) / getModule(position - sphere_position));

@@ -89,8 +89,8 @@ extern glm::vec3 gravity;
 
 float sphere_Mass = 1.0f;
 
-glm::vec3 capsule_position_a;
-glm::vec3 capsule_position_b;
+glm::vec3 capsule_position_a(-3,2,0);
+glm::vec3 capsule_position_b(0,2,-3);
 float capsule_Radius = 1.0f;
 glm::vec3 gravity_Accel;
 
@@ -167,7 +167,11 @@ void PhysicsInit() {
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
 	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
-	colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
+	if(renderSphere)
+		colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
+	if(renderCapsule)
+		colliders.push_back(new CapsuleCol(capsule_position_a, capsule_position_b, capsule_Radius));
+
 	forceActuators.push_back(new GravityForce());
 	forceActuators.push_back(new PositionalGravityForce());
 	
@@ -176,17 +180,19 @@ void PhysicsInit() {
 
 void PhysicsUpdate(float dt) {
 	// Do your update code here...
-	colliders.clear();
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(5, 0, -5), glm::vec3(5, 10, -5), glm::vec3(-5, 10, -5)}));
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(-5, 0, -5), glm::vec3(5, 0, -5)}));
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(5, 0, -5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, 5), glm::vec3(5, 0, 5), glm::vec3(5, 10, 5)}));
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 0, -5), glm::vec3(-5, 10, -5), glm::vec3(-5, 0, 5)}));
-	colliders.push_back(new PlaneCol(std::vector<glm::vec3>{glm::vec3(-5, 10, 5), glm::vec3(-5, 10, -5), glm::vec3(5, 10, -5)}));
-	colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
-	Sphere::updateSphere(SphereCenter, CurrentSphereRadius);
+	if(renderSphere)
+		colliders.pop_back();
+	if(renderCapsule)
+		colliders.pop_back();
+	if(renderSphere)
+		colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
+	if(renderCapsule)
+		colliders.push_back(new CapsuleCol(capsule_position_a, capsule_position_b, capsule_Radius));
 
-	Particles::updateParticles(0, 5000, &particleSystem.positions[0].x);
+	Sphere::updateSphere(SphereCenter, CurrentSphereRadius);
+	Capsule::updateCapsule(capsule_position_a, capsule_position_b, capsule_Radius);
+
+	Particles::updateParticles(0, NUM_PARTICLES, &particleSystem.positions[0].x);
 	euler(dt, particleSystem, colliders, forceActuators);
 
 	if (reset_simulation)
