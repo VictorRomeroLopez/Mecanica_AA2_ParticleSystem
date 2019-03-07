@@ -87,11 +87,11 @@ SphereCol sphere(SphereCenter, CurrentSphereRadius);
 extern bool use_Gravity;
 extern glm::vec3 gravity;
 
-float sphere_Mass = 1.0f;
+float sphereMass = 1.f;
 
-glm::vec3 capsule_position_a(-3,2,0);
-glm::vec3 capsule_position_b(0,2,-3);
-float capsule_Radius = 1.0f;
+glm::vec3 CapsulePositionA(-3,2,0);
+glm::vec3 CapsulePositionB(0,2,-3);
+float CurrentCapsuleRadius = 1.0f;
 glm::vec3 gravity_Accel;
 
 ParticleSystem particleSystem = ParticleSystem();
@@ -123,18 +123,18 @@ void GUI() {
 		if (ImGui::TreeNode("Sphere"))
 		{
 			ImGui::Checkbox("Use Sphere Collider", &renderSphere);
-			ImGui::DragFloat("Sphere Mass", &sphere_Mass);
-			ImGui::DragFloat3("Sphere Position", &SphereCenter.x);
-			ImGui::DragFloat("Sphere Radius", &CurrentSphereRadius);
+			ImGui::DragFloat("Sphere Mass", &sphereMass, 0.1f, 0, 10.0f);
+			ImGui::DragFloat3("Sphere Position", &SphereCenter.x, 0.1f);
+			ImGui::DragFloat("Sphere Radius", &CurrentSphereRadius, 0.1f);
 			ImGui::TreePop();
 		}
 
 		if (ImGui::TreeNode("Capsule"))
 		{
 			ImGui::Checkbox("Use Capsule Collider", &renderCapsule);
-			ImGui::DragFloat3("Capsule Pos A", &capsule_position_a.x, 0.1f);
-			ImGui::DragFloat3("Capsule Pos B", &capsule_position_b.x, 0.1f);
-			ImGui::DragFloat("Capsule Radius", &capsule_Radius, 0.1f);
+			ImGui::DragFloat3("Capsule Pos A", &CapsulePositionA.x, 0.1f);
+			ImGui::DragFloat3("Capsule Pos B", &CapsulePositionB.x, 0.1f);
+			ImGui::DragFloat("Capsule Radius", &CurrentCapsuleRadius, 0.1f);
 			ImGui::TreePop();
 		}
 
@@ -170,27 +170,36 @@ void PhysicsInit() {
 	if(renderSphere)
 		colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
 	if(renderCapsule)
-		colliders.push_back(new CapsuleCol(capsule_position_a, capsule_position_b, capsule_Radius));
+		colliders.push_back(new CapsuleCol(CapsulePositionA, CapsulePositionB, CurrentCapsuleRadius));
 
 	forceActuators.push_back(new GravityForce());
-	forceActuators.push_back(new PositionalGravityForce());
+	forceActuators.push_back(new PositionalGravityForce(SphereCenter));
 	
 	// ...................................
 }
 
 void PhysicsUpdate(float dt) {
 	// Do your update code here...
-	if(renderSphere)
+	if (renderSphere)
+	{
 		colliders.pop_back();
+		forceActuators.pop_back();
+	}
+
 	if(renderCapsule)
 		colliders.pop_back();
-	if(renderSphere)
+
+	if (renderSphere)
+	{
 		colliders.push_back(new SphereCol(SphereCenter, CurrentSphereRadius));
+		forceActuators.push_back(new PositionalGravityForce(SphereCenter));
+	}
+
 	if(renderCapsule)
-		colliders.push_back(new CapsuleCol(capsule_position_a, capsule_position_b, capsule_Radius));
+		colliders.push_back(new CapsuleCol(CapsulePositionA, CapsulePositionB, CurrentCapsuleRadius));
 
 	Sphere::updateSphere(SphereCenter, CurrentSphereRadius);
-	Capsule::updateCapsule(capsule_position_a, capsule_position_b, capsule_Radius);
+	Capsule::updateCapsule(CapsulePositionA, CapsulePositionB, CurrentCapsuleRadius);
 
 	Particles::updateParticles(0, NUM_PARTICLES, &particleSystem.positions[0].x);
 	euler(dt, particleSystem, colliders, forceActuators);

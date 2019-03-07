@@ -17,6 +17,9 @@ extern float nu;
 extern bool use_Gravity;
 extern glm::vec3 gravity;
 
+extern float sphereMass;
+extern glm::vec3 SphereCenter;
+
 #define NUM_PARTICLES 5000
 
 float getModule(glm::vec3& vec);
@@ -215,13 +218,15 @@ struct GravityForce : ForceActuator {
 
 //Centre de gravetat a un objecte 
 struct PositionalGravityForce : ForceActuator {
-	float massSphere = 3;
 	float G = -6.674f;
-	glm::vec3 sphere_position = glm::vec3(0,3,0);
+	glm::vec3 sphere_position = glm::vec3(SphereCenter);
+
+	PositionalGravityForce(glm::vec3 _SphereCenter) : sphere_position(_SphereCenter) {};
 
 	glm::vec3 computeForce(float mass, const glm::vec3& position) {
-		return ((G * mass * massSphere) / pow(getModule(position - sphere_position), 2)) * ((position - sphere_position) / getModule(position - sphere_position));
+		return ((G * mass * sphereMass) / pow(getModule(position - sphere_position), 2)) * ((position - sphere_position) / getModule(position - sphere_position));
 	}
+
 };
 
 void euler(float dt, ParticleSystem& particles, const std::vector<Collider*>& colliders, const std::vector<ForceActuator*>& force_acts);
